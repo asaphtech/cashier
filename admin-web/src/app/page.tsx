@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, CreditCard, DollarSign, Users, ShoppingBag } from "lucide-react";
 import { fetchProducts } from "@/lib/api";
+import { DashboardChart } from "@/components/DashboardChart";
 
 export default async function Home() {
   const products = await fetchProducts();
@@ -69,6 +70,15 @@ export default async function Home() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-0 shadow-sm ring-1 ring-slate-100 bg-white hover:shadow-md transition-shadow">
+        <CardHeader className="border-b border-slate-50 pb-4">
+          <CardTitle className="text-lg font-semibold text-slate-900">Revenue Overview</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-8">
+            <DashboardChart />
+        </CardContent>
+      </Card>
       
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4 border-0 shadow-sm ring-1 ring-slate-100 bg-white flex flex-col hover:shadow-md transition-shadow">

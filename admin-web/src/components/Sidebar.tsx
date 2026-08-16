@@ -34,12 +34,22 @@ export function Sidebar() {
           <Coffee size={20} className={pathname === '/menu' ? 'text-amber-500' : ''} />
           <span className="font-medium">Menu</span>
         </Link>
+        <Link 
+          href="/inventory" 
+          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${pathname === '/inventory' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-sm' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+        >
+          <ClipboardList size={20} className={pathname === '/inventory' ? 'text-amber-500' : ''} />
+          <span className="font-medium">Inventory & Stock</span>
+        </Link>
         <div className="pt-4 pb-2 px-4">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Coming Soon</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Reports & Config</p>
         </div>
-        <Link href="#" className="flex items-center gap-3 px-4 py-3.5 text-slate-600 hover:bg-slate-800/30 rounded-xl transition-colors cursor-not-allowed">
-          <ClipboardList size={20} />
-          <span className="font-medium">Orders</span>
+        <Link 
+          href="/orders" 
+          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${pathname === '/orders' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-sm' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+        >
+          <ClipboardList size={20} className={pathname === '/orders' ? 'text-amber-500' : ''} />
+          <span className="font-medium">Orders & Reports</span>
         </Link>
         <Link href="#" className="flex items-center gap-3 px-4 py-3.5 text-slate-600 hover:bg-slate-800/30 rounded-xl transition-colors cursor-not-allowed">
           <Settings size={20} />
