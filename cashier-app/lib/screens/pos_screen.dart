@@ -7,10 +7,10 @@ import '../widgets/product_card.dart';
 import '../widgets/cart_sidebar.dart';
 
 class PosScreen extends StatefulWidget {
-  const PosScreen({Key? key}) : super(key: key);
+  const PosScreen({super.key});
 
   @override
-  _PosScreenState createState() => _PosScreenState();
+  State<PosScreen> createState() => _PosScreenState();
 }
 
 class _PosScreenState extends State<PosScreen> {

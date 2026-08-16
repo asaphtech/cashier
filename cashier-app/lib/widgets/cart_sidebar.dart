@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/cart_provider.dart';
 
 class CartSidebar extends StatelessWidget {
-  const CartSidebar({Key? key}) : super(key: key);
+  const CartSidebar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +70,7 @@ class CartSidebar extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 DropdownButtonFormField<String>(
-                  value: cart.paymentMethod,
+                  initialValue: cart.paymentMethod,
                   decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'Payment Method'),
                   items: ['CASH', 'QRIS', 'E_WALLET'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
                   onChanged: (val) => cart.setPaymentMethod(val!),
@@ -84,6 +84,7 @@ class CartSidebar extends StatelessWidget {
                         ? null
                         : () async {
                             bool success = await cart.checkout();
+                            if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(success ? 'Order Placed Successfully!' : 'Offline Mode: Order Saved Locally')),
                             );
