@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  shifts    Shift[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique // Owner, Manager, Barista, Cashier
+  permissions String   // JSON string of permission strings
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  recipes     Recipe[]
+  orderItems  OrderItem[]
+  modifiers   Modifier[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Modifier {
+  id        String   @id @default(uuid())
+  name      String   // e.g., "Extra Shot", "Almond Milk"
+  price     Float
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Ingredient {
+  id        String   @id @default(uuid())
+  name      String   // e.g., "Espresso Beans", "Milk"
+  unit      String   // e.g., "g", "ml"
+  stock     Float    @default(0)
+  recipes   Recipe[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Recipe {
+  id           String     @id @default(uuid())
+  productId    String
+  ingredientId String
+  quantity     Float      // amount of ingredient used
+  product      Product    @relation(fields: [productId], references: [id])
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([productId, ingredientId])
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  totalAmount   Float
+  status        String      // "PENDING", "COMPLETED", "CANCELLED"
+  orderItems    OrderItem[]
+  payments      Payment[]
+  shiftId       String
+  shift         Shift       @relation(fields: [shiftId], references: [id])
+  syncStatus    String      @default("SYNCED") // "PENDING", "SYNCED"
+  localId       String?     // ID from local sqlite database for sync mapping
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float    // Price at the time of order
+  notes     String?
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  orderId       String
+  amount        Float
+  paymentMethod String   // "CASH", "QRIS", "E_WALLET"
+  status        String   // "SUCCESS", "FAILED"
+  order         Order    @relation(fields: [orderId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Shift {
+  id            String    @id @default(uuid())
+  userId        String
+  startTime     DateTime
+  endTime       DateTime?
+  startingCash  Float
+  endingCash    Float?
+  expectedCash  Float?
+  status        String    // "OPEN", "CLOSED"
+  user          User      @relation(fields: [userId], references: [id])
+  orders        Order[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
