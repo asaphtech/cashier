@@ -7,6 +7,10 @@ import { Home, Coffee, ClipboardList, Settings, Store } from 'lucide-react';
 export function Sidebar() {
   const pathname = usePathname();
 
+  if (pathname === '/kds') {
+    return null;
+  }
+
   return (
     <div className="w-72 bg-slate-950 text-white min-h-screen p-4 flex flex-col border-r border-slate-800/60 shadow-2xl">
       <div className="mb-10 p-4 flex items-center gap-3">
@@ -40,6 +44,17 @@ export function Sidebar() {
         >
           <ClipboardList size={20} className={pathname === '/inventory' ? 'text-amber-500' : ''} />
           <span className="font-medium">Inventory & Stock</span>
+        </Link>
+
+        <div className="pt-4 pb-2 px-4">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Operations</p>
+        </div>
+        <Link 
+          href="/kds" 
+          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${pathname === '/kds' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-sm' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+        >
+          <ClipboardList size={20} className={pathname === '/kds' ? 'text-amber-500' : ''} />
+          <span className="font-medium">Kitchen Display</span>
         </Link>
         <div className="pt-4 pb-2 px-4">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Reports & Config</p>
