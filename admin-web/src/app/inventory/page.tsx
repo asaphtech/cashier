@@ -9,17 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, Search, Package } from "lucide-react";
 
-// Mock data until API is ready
-const mockIngredients = [
-  { id: "ING-1", name: "Espresso Beans", stock: 1500, unit: "g" },
-  { id: "ING-2", name: "Fresh Milk", stock: 5000, unit: "ml" },
-  { id: "ING-3", name: "Palm Sugar", stock: 1000, unit: "g" },
-  { id: "ING-4", name: "Caramel Syrup", stock: 800, unit: "ml" },
-  { id: "ING-5", name: "Plastic Cup (Iced)", stock: 200, unit: "pcs" },
-];
+import { fetchInventory } from "@/lib/api";
 
 export default async function InventoryPage() {
-  const ingredients = mockIngredients;
+  const ingredients = await fetchInventory();
 
   return (
     <div className="p-8 lg:p-10 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">

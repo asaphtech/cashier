@@ -85,12 +85,69 @@ app.post('/api/orders', async (req, res) => {
       }
     });
 
+    // Track 2: Auto-deduct stock based on recipes
+    if (status === 'COMPLETED') {
+      for (const item of orderItems) {
+        const recipes = await prisma.recipe.findMany({
+          where: { productId: item.productId }
+        });
+        
+        for (const recipe of recipes) {
+          await prisma.ingredient.update({
+            where: { id: recipe.ingredientId },
+            data: {
+              stock: {
+                decrement: recipe.quantity * item.quantity
+              }
+            }
+          });
+        }
+      }
+    }
+
     res.status(201).json(newOrder);
   } catch (error: any) {
     console.error('Error creating order:', error);
     res.status(500).json({ error: 'Failed to create order', details: error.message });
   }
 });
+
+// Get all orders (for Admin Web / KDS)
+app.get('/api/orders', async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        orderItems: {
+          include: {
+            product: true
+          }
+        },
+        payments: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+// Get all inventory (Ingredients)
+app.get('/api/inventory', async (req, res) => {
+  try {
+    const ingredients = await prisma.ingredient.findMany({
+      orderBy: {
+        name: 'asc'
+      }
+    });
+    res.json(ingredients);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch inventory' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

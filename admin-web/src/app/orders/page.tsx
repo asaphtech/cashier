@@ -9,16 +9,10 @@ import {
 } from "@/components/ui/table";
 import { ShoppingBag } from "lucide-react";
 
-// Mock data until API is ready
-const mockOrders = [
-  { id: "ORD-1234-ABCD", totalAmount: 45000, status: "COMPLETED", createdAt: new Date().toISOString() },
-  { id: "ORD-5678-EFGH", totalAmount: 25000, status: "COMPLETED", createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: "ORD-9012-IJKL", totalAmount: 75000, status: "COMPLETED", createdAt: new Date(Date.now() - 172800000).toISOString() },
-];
+import { fetchOrders } from "@/lib/api";
 
 export default async function OrdersPage() {
-  // In a real scenario: const orders = await fetchOrders();
-  const orders = mockOrders;
+  const orders = await fetchOrders();
 
   return (
     <div className="p-8 lg:p-10 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">

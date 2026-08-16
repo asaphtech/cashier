@@ -1,10 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, CreditCard, DollarSign, Users, ShoppingBag } from "lucide-react";
-import { fetchProducts } from "@/lib/api";
+import { fetchProducts, fetchOrders } from "@/lib/api";
 import { DashboardChart } from "@/components/DashboardChart";
 
 export default async function Home() {
   const products = await fetchProducts();
+  const orders = await fetchOrders();
+
+  const totalRevenue = orders.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
+  const totalSales = orders.length;
 
   return (
     <div className="p-8 lg:p-10 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -22,9 +26,9 @@ export default async function Home() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-900">Rp 0</div>
+            <div className="text-3xl font-bold text-slate-900">Rp {new Intl.NumberFormat('id-ID').format(totalRevenue)}</div>
             <p className="text-xs text-emerald-600 font-medium mt-1 flex items-center">
-              <span className="bg-emerald-100 px-1 rounded mr-2">+0%</span> from last month
+              <span className="bg-emerald-100 px-1 rounded mr-2">Live</span> Updated today
             </p>
           </CardContent>
         </Card>
@@ -37,9 +41,9 @@ export default async function Home() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-900">+0</div>
+            <div className="text-3xl font-bold text-slate-900">{totalSales}</div>
             <p className="text-xs text-blue-600 font-medium mt-1 flex items-center">
-              <span className="bg-blue-100 px-1 rounded mr-2">+0%</span> from last month
+              <span className="bg-blue-100 px-1 rounded mr-2">Live</span> Orders completed
             </p>
           </CardContent>
         </Card>
@@ -65,8 +69,8 @@ export default async function Home() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-900">0</div>
-            <p className="text-xs text-slate-500 font-medium mt-1">Pending transactions</p>
+            <div className="text-3xl font-bold text-slate-900">{totalSales}</div>
+            <p className="text-xs text-slate-500 font-medium mt-1">Total guests served</p>
           </CardContent>
         </Card>
       </div>
@@ -85,12 +89,34 @@ export default async function Home() {
           <CardHeader className="border-b border-slate-50 pb-4">
             <CardTitle className="text-lg font-semibold text-slate-900">Recent Orders</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 p-6">
-            <div className="h-full min-h-[250px] flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-              <ShoppingBag className="h-10 w-10 text-slate-300 mb-3" />
-              <p className="text-sm font-medium text-slate-600">No recent orders found</p>
-              <p className="text-xs text-slate-400 mt-1">Test checkout on cashier app first!</p>
-            </div>
+          <CardContent className="flex-1 p-0">
+            {orders.length === 0 ? (
+              <div className="h-full min-h-[250px] flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 m-6">
+                <ShoppingBag className="h-10 w-10 text-slate-300 mb-3" />
+                <p className="text-sm font-medium text-slate-600">No recent orders found</p>
+                <p className="text-xs text-slate-400 mt-1">Test checkout on cashier app first!</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {orders.slice(0, 5).map((order: any) => (
+                  <div key={order.id} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-slate-100 p-2 rounded-lg">
+                        <ShoppingBag className="h-4 w-4 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{order.id.substring(0, 8)}</p>
+                        <p className="text-xs text-slate-500">{new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-slate-900">Rp {new Intl.NumberFormat('id-ID').format(order.totalAmount)}</p>
+                      <p className="text-xs text-emerald-600 font-medium">{order.status}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
         

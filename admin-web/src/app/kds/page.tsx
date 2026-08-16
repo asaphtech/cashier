@@ -1,61 +1,65 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Clock, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
 
-// Mock Data
-const initialOrders = [
-  {
-    id: "ORD-1234",
-    time: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 mins ago
-    status: "PENDING",
-    type: "Dine In",
-    table: "04",
-    items: [
-      { name: "Iced Caramel Macchiato", qty: 2, notes: "Less sugar, oat milk" },
-      { name: "Espresso", qty: 1, notes: "" }
-    ]
-  },
-  {
-    id: "ORD-1235",
-    time: new Date(Date.now() - 1000 * 60 * 12).toISOString(), // 12 mins ago
-    status: "PENDING",
-    type: "Takeaway",
-    table: "-",
-    items: [
-      { name: "Americano", qty: 1, notes: "Extra hot" },
-      { name: "Croissant", qty: 1, notes: "Warm it up" }
-    ]
-  },
-  {
-    id: "ORD-1236",
-    time: new Date(Date.now() - 1000 * 60 * 1).toISOString(), // 1 min ago
-    status: "PENDING",
-    type: "Dine In",
-    table: "12",
-    items: [
-      { name: "Matcha Latte", qty: 3, notes: "" }
-    ]
-  }
-];
+import { API_URL } from "@/lib/api";
 
 export default function KDSPage() {
-  const [orders, setOrders] = useState(initialOrders);
+  const [orders, setOrders] = useState<any[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [mounted, setMounted] = useState(false);
 
-  // Update current time every minute to refresh order waiting times
+  // Fetch orders from API
+  const fetchPendingOrders = async () => {
+    try {
+      const res = await fetch(`${API_URL}/orders`);
+      if (res.ok) {
+        const data = await res.json();
+        // Filter only pending orders for the kitchen
+        const pendingOrders = data.filter((o: any) => o.status === 'PENDING').map((o: any) => ({
+          id: o.id,
+          time: o.createdAt,
+          status: o.status,
+          type: "Dine In", // Fallback for now since type might not be in DB
+          table: "-",
+          items: o.orderItems.map((item: any) => ({
+            name: item.product?.name || 'Unknown',
+            qty: item.quantity,
+            notes: item.notes || ''
+          }))
+        }));
+        setOrders(pendingOrders);
+      }
+    } catch (e) {
+      console.error("Failed to fetch KDS orders", e);
+    }
+  };
+
+  // Initial fetch and polling
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
+    setMounted(true);
+    fetchPendingOrders();
+    const fetchTimer = setInterval(fetchPendingOrders, 10000); // Polling every 10s
+    const timeTimer = setInterval(() => setCurrentTime(new Date()), 60000);
+    
+    return () => {
+      clearInterval(fetchTimer);
+      clearInterval(timeTimer);
+    };
   }, []);
 
-  const completeOrder = (id: string) => {
+  const completeOrder = async (id: string) => {
+    // In a real app, we'd send a PUT request to update the status to COMPLETED
+    // For now, we update local state to feel snappy
     setOrders(orders.filter(o => o.id !== id));
   };
 
   const getWaitTime = (timeString: string) => {
+    if (!mounted) return 0;
     const diff = Math.floor((currentTime.getTime() - new Date(timeString).getTime()) / 60000);
     return diff;
   };
@@ -63,9 +67,16 @@ export default function KDSPage() {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 p-6 flex flex-col">
       <header className="flex justify-between items-center mb-8 bg-slate-800 p-4 rounded-2xl shadow-lg border border-slate-700">
-        <div>
-          <h1 className="text-2xl font-bold text-amber-500 tracking-tight">Kopi Tabo KDS</h1>
-          <p className="text-slate-400 text-sm font-medium mt-1">Kitchen Display System</p>
+        <div className="flex items-center gap-4">
+          <Link href="/">
+            <Button variant="outline" size="icon" className="bg-slate-700 border-slate-600 text-slate-300 hover:text-white hover:bg-slate-600 h-10 w-10 rounded-xl">
+              <ArrowLeft size={18} />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-amber-500 tracking-tight">Kopi Tabo KDS</h1>
+            <p className="text-slate-400 text-sm font-medium mt-1">Kitchen Display System</p>
+          </div>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-xl border border-slate-700">
@@ -74,10 +85,10 @@ export default function KDSPage() {
           </div>
           <div className="text-right">
             <p className="text-3xl font-bold tabular-nums tracking-tight">
-              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {mounted ? currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--"}
             </p>
             <p className="text-slate-400 text-sm">
-              {currentTime.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
+              {mounted ? currentTime.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' }) : "Loading..."}
             </p>
           </div>
         </div>
@@ -93,16 +104,16 @@ export default function KDSPage() {
             return (
               <Card 
                 key={order.id} 
-                className={`flex-shrink-0 w-80 bg-slate-800 border-2 overflow-hidden flex flex-col shadow-xl ${
-                  isLate ? 'border-red-500/50 shadow-red-900/20' : 
-                  isWarning ? 'border-amber-500/50 shadow-amber-900/20' : 
+                className={`flex-shrink-0 w-80 bg-slate-800 border-2 overflow-hidden flex flex-col shadow-xl transition-colors duration-500 ${
+                  isLate && mounted ? 'border-red-500/50 shadow-red-900/20' : 
+                  isWarning && mounted ? 'border-amber-500/50 shadow-amber-900/20' : 
                   'border-slate-700'
                 }`}
               >
                 {/* Header */}
-                <div className={`p-4 border-b flex justify-between items-start ${
-                  isLate ? 'bg-red-500/10 border-red-500/20' : 
-                  isWarning ? 'bg-amber-500/10 border-amber-500/20' : 
+                <div className={`p-4 border-b flex justify-between items-start transition-colors duration-500 ${
+                  isLate && mounted ? 'bg-red-500/10 border-red-500/20' : 
+                  isWarning && mounted ? 'bg-amber-500/10 border-amber-500/20' : 
                   'bg-slate-900/50 border-slate-700'
                 }`}>
                   <div>
@@ -118,13 +129,13 @@ export default function KDSPage() {
                       )}
                     </div>
                   </div>
-                  <div className={`flex items-center gap-1.5 font-bold tabular-nums px-2.5 py-1 rounded-lg ${
-                    isLate ? 'bg-red-500 text-white' : 
-                    isWarning ? 'bg-amber-500 text-slate-900' : 
+                  <div className={`flex items-center gap-1.5 font-bold tabular-nums px-2.5 py-1 rounded-lg transition-colors duration-500 ${
+                    isLate && mounted ? 'bg-red-500 text-white' : 
+                    isWarning && mounted ? 'bg-amber-500 text-slate-900' : 
                     'bg-slate-700 text-slate-300'
                   }`}>
                     <Clock size={16} />
-                    {waitTime}m
+                    {mounted ? waitTime : 0}m
                   </div>
                 </div>
 
